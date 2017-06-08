@@ -1,4 +1,5 @@
 require './lib/colored_text'
+require './lib/buffet/types'
 
 class BuffetInterpreter
   def self.tag_filter(x, tags_to_include, tags_to_exclude)
@@ -79,21 +80,19 @@ class BuffetInterpreter
 
   def self.monthly(x)
     if is_list_of_transactions? x
-      x.group_by {|t| Date.parse(t.date).strftime("%m/01/%Y")}.
-        sort_by {|(s,_)| Date.strptime(s, "%m/%d/%Y")}
+      x.group_by {|t| MonthYear.new(t.rdate)}.
+        sort_by {|(m,_)| m}
     else
       raise "`monthly`: unexpected type #{type_str(x)}"
     end
   end
 
-  def self.daily(x)
-    raise "TODO: Implement `daily` command. This will likely involve refactoring `monthly` and date handling more generally. Consider implemtning real types, e.g., MonthYear, MonthDayYear for nicer printing and dispatch."
-
+  def self.yearly(x)
     if is_list_of_transactions? x
-      x.group_by {|t| Date.parse(t.date).strftime("%m/%d/%Y")}.
-        sort_by {|(s,_)| Date.strptime(s, "%m/%d/%Y")}
+      x.group_by {|t| Year.new(t.rdate)}.
+        sort_by {|(y,_)| y}
     else
-      raise "`daily`: unexpected type #{type_str(x)}"
+      raise "`yearly`: unexpected type #{type_str(x)}"
     end
   end
 
@@ -105,17 +104,17 @@ class BuffetInterpreter
     elsif is_list_of_transactions?(x)
       puts x.map(&:format)
     elsif is_grouped?(x)
-      x.map do |(month,y)|
-        month = yellow_text(Date.strptime(month, "%m/%d/%Y").strftime("%m/%y"))
+      x.map do |(date,y)|
+        d = yellow_text(date.to_s)
 
         if is_list_of_transactions?(y)
-          puts month
+          puts d
           puts y.map(&:format)
           puts
         elsif is_float?(y)
-          puts "#{month}\t#{format_money(y)}"
+          puts "#{d}\t#{format_money(y)}"
         elsif is_integer?(y)
-          puts "#{month}\t#{y}"
+          puts "#{d}\t#{y}"
         end
       end
     end

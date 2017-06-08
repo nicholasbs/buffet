@@ -267,6 +267,10 @@ Transaction = Struct.new(:hash, :account, :date, :amount, :description, :check_n
   def untagged?
     tags.nil? || tags.empty?
   end
+
+  def rdate
+    @rdate || @rdate = Date.strptime(date, "%Y-%m-%d")
+  end
 end
 
 # Helpers

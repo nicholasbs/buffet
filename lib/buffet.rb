@@ -4,6 +4,7 @@ require 'date'
 
 require_relative 'buffet/interpreter'
 require_relative 'buffet/csv_parser'
+require_relative 'buffet/types'
 require_relative 'buffet/google_sheets_uploader'
 require_relative '../config'
 require_relative 'colored_text'
@@ -144,6 +145,8 @@ module Buffet
               reg = BuffetInterpreter.daily(reg)
             elsif command == "monthly"
               reg = BuffetInterpreter.monthly(reg)
+            elsif command == "yearly"
+              reg = BuffetInterpreter.yearly(reg)
             elsif command == "sum"
               reg = BuffetInterpreter.sum(reg)
             end
@@ -253,14 +256,11 @@ module Buffet
       else
         range = "#{Buffet::Config::GOOGLE_SHEETS_SPENDING_SHEET}"
         transactions_by_month = load_transactions.group_by do |t|
-          d = Date.parse(t.date)
-          Date.new(d.year, d.month, 1)
+          MonthYear.new(t.rdate)
         end
-        sorted_months = transactions_by_month.keys.sort do |m1,m2|
-          m1 <=> m2
-        end
+        sorted_months = transactions_by_month.keys.sort
 
-        values = [[nil] + sorted_months] # first row is header of months
+        values = [[nil] + sorted_months.map(&:to_date)] # first row is header of months
         (Buffet::Config::PRIMARY_TAGS + ['unknown']).each do |tag|
           row = [tag] + sorted_months.map do |month|
             transactions_by_month[month].reduce(0) do |total, transaction|
