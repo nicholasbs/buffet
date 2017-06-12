@@ -8,7 +8,7 @@ class BuffetInterpreter
         (!tags_to_include.empty? && has_tag(transaction, tags_to_include)) || (!tags_to_exclude.empty? && does_not_have_tag(transaction, tags_to_exclude))
       end
     else
-      raise "`tag_filter`: unexpected type #{type_str(x)}"
+      type_error("tag_filter", x)
     end
   end
 
@@ -16,7 +16,7 @@ class BuffetInterpreter
     if is_list_of_transactions? x
       x.select {|transaction| transaction.description =~ /#{query}/i}
     else
-      raise "`search`: unexpected type #{type_str(x)}"
+      type_error("search", x)
     end
   end
 
@@ -30,7 +30,7 @@ class BuffetInterpreter
     elsif is_grouped_transactions? x
       x.map {|y,ts| [y, ts.map(&:amount).reduce(&:+)]}
     else
-      raise "`sum`: unexpected type #{type_str(x)}"
+      type_error("sum", x)
     end
   end
 
@@ -42,7 +42,7 @@ class BuffetInterpreter
     elsif is_list? x
       x.size
     else
-      raise "`count`: unexpected type #{type_str(x)}"
+      type_error("count", x)
     end
   end
 
@@ -58,7 +58,7 @@ class BuffetInterpreter
     elsif is_grouped_numbers? x
       x.map {|(_,num)| num.to_f}.reduce(&:+) / x.size
     else
-      raise "`avg`: unexpected type #{type_str(x)}"
+      type_error("avg", x)
     end
   end
 
@@ -66,7 +66,7 @@ class BuffetInterpreter
     if is_list? x
       x.last(n)
     else
-      raise "`last`: unexpected type #{type_str(x)}"
+      type_error("last", x)
     end
   end
 
@@ -74,7 +74,7 @@ class BuffetInterpreter
     if is_list? x
       x.reverse
     else
-      raise "`reverse`: unexpected type #{type_str(x)}"
+      type_error("reverse", x)
     end
   end
 
@@ -83,7 +83,7 @@ class BuffetInterpreter
       x.group_by {|t| MonthYear.new(t.rdate)}.
         sort_by {|(m,_)| m}
     else
-      raise "`monthly`: unexpected type #{type_str(x)}"
+      type_error("monthly", x)
     end
   end
 
@@ -92,7 +92,7 @@ class BuffetInterpreter
       x.group_by {|t| Year.new(t.rdate)}.
         sort_by {|(y,_)| y}
     else
-      raise "`yearly`: unexpected type #{type_str(x)}"
+      type_error("yearly", x)
     end
   end
 
@@ -117,6 +117,8 @@ class BuffetInterpreter
           puts "#{d}\t#{y}"
         end
       end
+    else
+      type_error("print", x)
     end
 
     puts pink_text(type_str(x))
@@ -191,4 +193,10 @@ end
 
 def does_not_have_tag(transaction, tags)
   transaction.tags.all? {|t| !tags.include?(t)}
+end
+
+def type_error(func, reg)
+  puts "`#{func}`: unexpected type #{type_str(reg)}"
+
+  reg
 end

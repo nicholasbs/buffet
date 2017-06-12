@@ -23,9 +23,6 @@ programming environment.
 * Format empty lists better when printing types (e.g., `[]` instead of
   `[NilClass]).
 
-* Type errors should print an error and return to the REPL (leaving *reg*
-  unchanged) instead of exiting.
-
 * Nicer error messages in general.
 
 * Update docs to reflect new output formatting.
