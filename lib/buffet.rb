@@ -99,8 +99,37 @@ module Buffet
       end
     end
 
+    COMMANDS = [
+      "quit",
+      "reset",
+      "monthly",
+      "yearly",
+      "sum",
+      "avg",
+      "count",
+      "reverse",
+      "last"
+    ].sort
+
     desc "repl", "interactive programming environment"
     def repl
+      Readline.completer_word_break_characters = ""
+      Readline.completion_proc = Proc.new do |str|
+        md = str.match(/(\s*)([^->]+)$/)
+
+        if md && md[2]
+          whitespace = md[1]
+          completable_part = md[2]
+          remainder = str[0...(str.size - completable_part.size - whitespace.size)]
+
+          COMMANDS.select do |command|
+            command =~ /#{Regexp.escape(completable_part)}/
+          end.map do |option|
+            "#{remainder}#{whitespace}#{option}"
+          end
+        end
+      end
+
       reg = load_transactions
 
       loop do
@@ -141,8 +170,6 @@ module Buffet
               reg = BuffetInterpreter.reverse(reg)
             elsif md = command.match(/last\s+(?<n>\d+)/) # last 3
               reg = BuffetInterpreter.last(reg, md[:n].to_i)
-            elsif command == "daily"
-              reg = BuffetInterpreter.daily(reg)
             elsif command == "monthly"
               reg = BuffetInterpreter.monthly(reg)
             elsif command == "yearly"
