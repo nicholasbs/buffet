@@ -1,6 +1,7 @@
 require 'thor'
 require 'json'
 require 'date'
+require 'readline'
 
 require_relative 'buffet/interpreter'
 require_relative 'buffet/csv_parser'
@@ -103,8 +104,7 @@ module Buffet
       reg = load_transactions
 
       loop do
-        print "> "
-        line = STDIN.gets.strip
+        line = Readline.readline("> ", true)
 
         if ["q", "quit"].include?(line)
           break

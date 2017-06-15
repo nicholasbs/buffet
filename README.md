@@ -6,8 +6,6 @@ programming environment.
 
 ### TODOs
 
-* Switch to `Readline`.
-
 * Tag rules should take an optional block, which gets passed a Transaction, and
   which (if the block is present) causes the rule to apply only if the block
   returns true. Or perhaps there should be writing rules with blocks that can
