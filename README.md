@@ -12,8 +12,7 @@ programming environment.
   arbitrarily transform Transactions (e.g., Transaction -> Transaction).
 
 * Add autocomplete for tags. For example, if you type *[fo* you should be able
-  to press tab and get *[food]*. Autocomplete would be nice but less useful for
-  other commands.
+  to press tab and get *[food]*.
 
 * Consider making types (using `Struct`) for all types, like `Transaction` is
   now.
