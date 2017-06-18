@@ -4,10 +4,14 @@ require './lib/colored_text'
 require './lib/buffet/types'
 
 class BuffetInterpreter
-  def initialize(reg, env={})
-    @env = env
+  def initialize(reg, envrc=[])
+    @env = {}
     @reg = reg
     @initial_reg = reg.dup
+
+    envrc.each do |line|
+      evaluate(line)
+    end
   end
 
   def self.reset(x)
@@ -165,23 +169,30 @@ class BuffetInterpreter
       if ["q", "quit"].include?(line)
         break
       else
-        evaluate(line)
+        begin
+          reg = evaluate(line)
+          BuffetInterpreter.print(reg)
+        rescue => e
+          puts e.message
+        end
       end
     end
+
+    @env
   end
 
   def evaluate(line)
     if md = line.match(/^(?<name>[A-Z]+\w*):(?<cmd>.*)/)
       name = md[:name].to_sym
+      cmd = md[:cmd].strip
 
       if @env.key?(name)
-        puts "#{name} is already defined"
+        raise "#{name} is already defined"
       else
-        @env[name] = md[:cmd]
-        puts pink_text(type_str(name))
+        @env[name] = cmd
       end
 
-      return
+      return @reg
     end
 
     commands = line.split(/\s*->\s*/).map(&:strip)
@@ -201,8 +212,8 @@ class BuffetInterpreter
           tags_to_include.map {|m| m[:tag]},
           tags_to_exclude.map {|m| m[:tag]}
         )
-      elsif @env.key?(command)
-        evaluate(@env[command])
+      elsif @env.key?(command.to_sym)
+        @reg = evaluate(@env[command.to_sym])
       elsif md = command.match(/^\/(?<query>.*)/)
         @reg = BuffetInterpreter.search(@reg, md[:query])
       elsif command == "reset"
@@ -221,10 +232,12 @@ class BuffetInterpreter
         @reg = BuffetInterpreter.yearly(@reg)
       elsif command == "sum"
         @reg = BuffetInterpreter.sum(@reg)
+      else
+        raise "Unknown command: #{command}"
       end
     end
 
-    BuffetInterpreter.print(@reg)
+    @reg
   end
 end
 
@@ -303,7 +316,5 @@ def does_not_have_tag(transaction, tags)
 end
 
 def type_error(func, reg)
-  puts "`#{func}`: unexpected type #{type_str(reg)}"
-
-  reg
+  raise "`#{func}`: unexpected type #{type_str(reg)}"
 end

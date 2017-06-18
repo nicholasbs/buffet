@@ -17,8 +17,6 @@ programming environment.
 * Consider making types (using `Struct`) for all types, like `Transaction` is
   now.
 
-* Nicer error messages in general.
-
 * Update docs to reflect new output formatting.
 
 * Dynamic widths when printing descriptions and account names (e.g., if the

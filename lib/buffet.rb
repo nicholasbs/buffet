@@ -100,7 +100,9 @@ module Buffet
 
     desc "repl", "interactive programming environment"
     def repl
-      BuffetInterpreter.new(load_transactions).repl
+      env = BuffetInterpreter.new(load_transactions, load_envrc).repl
+
+      save_env(env)
     end
 
     desc "tag", "interactively tag transactions"
@@ -318,6 +320,25 @@ module Buffet
     def parse_csv_files(filenames)
       filenames.map do |filename|
         CSVParser.parse(filename)
+      end
+    end
+
+    def load_envrc
+      begin
+        File.open(Buffet::Config::ENV_PATH, "r") do |f|
+          f.each_line.reject(&:empty?)
+        end
+      rescue
+        puts "#{Buffet::Config::ENV_PATH} does not exist. Initializing empty environment."
+        []
+      end
+    end
+
+    def save_env(env)
+      File.open(Buffet::Config::ENV_PATH, "w") do |f|
+        env.each do |name, body|
+          f.write("#{name}: #{body}\n")
+        end
       end
     end
 

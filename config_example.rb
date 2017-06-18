@@ -5,6 +5,7 @@ require 'set'
 module Buffet
   module Config
     # Make sure to create "data" directory
+    ENV_PATH = "./data/envrc"
     TRANSACTIONS_DB_PATH = "./data/transactions.db"
     IMPORT_LOG_PATH = "./data/import_log.txt"
 
