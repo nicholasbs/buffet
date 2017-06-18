@@ -186,9 +186,6 @@ class BuffetInterpreter
         )
       elsif md = command.match(/^\/(?<query>.*)/)
         @reg = BuffetInterpreter.search(@reg, md[:query])
-      elsif command == "accounts"
-        puts @reg.map(&:account).uniq
-        exit
       elsif command == "reset"
         @reg = BuffetInterpreter.reset(@initial_reg)
       elsif command == "avg"
