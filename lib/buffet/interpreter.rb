@@ -183,7 +183,7 @@ class BuffetInterpreter
 
   def evaluate(line)
     if md = line.match(/^(?<name>[A-Z]+\w*):(?<cmd>.*)/)
-      name = md[:name].to_sym
+      name = md[:name]
       cmd = md[:cmd].strip
 
       if @env.key?(name)
@@ -212,8 +212,8 @@ class BuffetInterpreter
           tags_to_include.map {|m| m[:tag]},
           tags_to_exclude.map {|m| m[:tag]}
         )
-      elsif @env.key?(command.to_sym)
-        @reg = evaluate(@env[command.to_sym])
+      elsif @env.key?(command)
+        @reg = evaluate(@env[command])
       elsif md = command.match(/^\/(?<query>.*)/)
         @reg = BuffetInterpreter.search(@reg, md[:query])
       elsif command == "reset"
