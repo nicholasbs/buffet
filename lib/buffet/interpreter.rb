@@ -155,8 +155,8 @@ class BuffetInterpreter
         completable_part = md[2]
         remainder = str[0...(str.size - completable_part.size - whitespace.size)]
 
-        COMMANDS.select do |command|
-          command =~ /#{Regexp.escape(completable_part)}/
+        (COMMANDS + @env.keys).sort.select do |command|
+          command =~ /^#{Regexp.escape(completable_part)}/
         end.map do |option|
           "#{remainder}#{whitespace}#{option}"
         end
