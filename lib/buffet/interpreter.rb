@@ -5,8 +5,12 @@ require './lib/buffet/types'
 
 class BuffetInterpreter
   def initialize(reg)
-    @initial_reg = reg
-    @reg = reg.dup
+    @reg = reg
+    @initial_reg = reg.dup
+  end
+
+  def self.reset(x)
+    x.dup
   end
 
   def self.tag_filter(x, tags_to_include, tags_to_exclude)
@@ -186,7 +190,7 @@ class BuffetInterpreter
         puts @reg.map(&:account).uniq
         exit
       elsif command == "reset"
-        @reg = @initial_reg.dup
+        @reg = BuffetInterpreter.reset(@initial_reg)
       elsif command == "avg"
         @reg = BuffetInterpreter.avg(@reg)
       elsif command == "count"
