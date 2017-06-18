@@ -148,17 +148,29 @@ class BuffetInterpreter
   def repl
     Readline.completer_word_break_characters = ""
     Readline.completion_proc = Proc.new do |str|
-      md = str.match(/(\s*)([^->]+)$/)
+      if str.end_with?("  ")
+        ["#{str[0..-2]}#{Buffet::Config::COMMAND_SEPARATOR}"]
+      else
+        md = str.match(/(\s*)([^#{Buffet::Config::COMMAND_SEPARATOR}]+)$/)
 
-      if md && md[2]
-        whitespace = md[1]
-        completable_part = md[2]
-        remainder = str[0...(str.size - completable_part.size - whitespace.size)]
+        if md && md[2]
+          whitespace = md[1]
+          completable_part = md[2]
+          remainder = str[0...(str.size - completable_part.size - whitespace.size)]
 
-        (COMMANDS + @env.keys).sort.select do |command|
-          command =~ /^#{Regexp.escape(completable_part)}/
-        end.map do |option|
-          "#{remainder}#{whitespace}#{option}"
+          if completable_part.start_with?("[")
+            Buffet::Config::ALL_TAGS.sort.select do |tag|
+              "[#{tag}" =~ /^#{Regexp.escape(completable_part)}/
+            end.map do |option|
+              "#{remainder}#{whitespace}[#{option}]"
+            end
+          else
+            (COMMANDS + @env.keys).sort.select do |command|
+              command =~ /^#{Regexp.escape(completable_part)}/
+            end.map do |option|
+              "#{remainder}#{whitespace}#{option}"
+            end
+          end
         end
       end
     end
@@ -195,7 +207,7 @@ class BuffetInterpreter
       return @reg
     end
 
-    commands = line.split(/\s*->\s*/).map(&:strip)
+    commands = line.split(/\s*#{Buffet::Config::COMMAND_SEPARATOR}\s*/).map(&:strip)
 
     commands.each do |command|
       if command.start_with?("[") || command.start_with?("!")

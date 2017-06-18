@@ -125,5 +125,8 @@ module Buffet
     RULES = {
       # "Ruby's Cafe - NEW YORK, NY" => ["eating out"],
     }
+
+    # Change at your own peril
+    COMMAND_SEPARATOR = "»"
   end
 end

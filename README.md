@@ -91,17 +91,17 @@ You can reset the value of *reg* to be your entire database at any time with the
 >
 ```
 
-You can chain commands using the `->` operator:
+You can chain commands using the `»` operator:
 
 ```
-> reset -> last 2 -> sum
+> reset » last 2 » sum
 $31.89
 ```
 
 The `monthly` command groups a list of transactions by month:
 
 ```
-> reset -> monthly -> last 3
+> reset » monthly » last 3
 [...cut for brevity...]
 ```
 
@@ -128,7 +128,7 @@ $19166.06
 You can filter by putting the name of a tag in brackets:
 
 ```
-> reset -> [gas]
+> reset » [gas]
 -43.01    NATIONAL GRID NY UTILITYPAY SEP 16~ Tran 2016-09-20 Checking account
 -40.93    NATIONAL GRID NY UTILITYPAY AUG 16~ Tran 2016-08-22 Checking account
 -45.77    NATIONAL GRID NY UTILITYPAY JUL 16~ Tran 2016-07-22 Checking account
@@ -141,7 +141,7 @@ The above shows only transactions tagged **gas**.
 You can filter by multiple tags. For instance, if you want transactions tagged **gas** *or* **internet** :
 
 ```
-> reset -> [gas] [internet]
+> reset » [gas] [internet]
 [... cut for brevity...]
 >
 ```
@@ -149,7 +149,7 @@ You can filter by multiple tags. For instance, if you want transactions tagged *
 If you want transactions tagged with *both* **travel** and **wedding** you can chain multiple tags together:
 
 ```
-> reset -> [travel] -> [wedding]
+> reset » [travel] » [wedding]
 -22.15		BP#8124628WYE MILLS BP 9271 - QUEENSTOWN, MD 2016-10-21 Amex
 -19.19		SUNOCO 1367302201 1354400002 - E BRUNSWICK, NJ 2016-10-23 Amex
 -260.81		HERTZ RENT-A-CAR 2016-09-18 Chase (Kim)
@@ -159,7 +159,7 @@ If you want transactions tagged with *both* **travel** and **wedding** you can c
 You can filter *out* a specific tag by using `!`, the negation operator, before a tag:
 
 ```
-> reset -> ![wedding]
+> reset » ![wedding]
 [...cut for brevity...]
 >
 ```
@@ -169,7 +169,7 @@ The above shows all transactions that are *not* tagged **wedding**.
 Thus you can filter to any boolean expression. For example:
 
 ```
-> reset -> ![ignore] -> [cash] [food]
+> reset » ![ignore] » [cash] [food]
 [...cut for brevity...]
 >
 ```
@@ -179,7 +179,7 @@ The above shows all transactions that are *not* tagged **ignore** and which *are
 The `count` command gives the length of *reg*:
 
 ```
-> reset -> [food] -> count
+> reset » [food] » count
 773
 >
 ```
