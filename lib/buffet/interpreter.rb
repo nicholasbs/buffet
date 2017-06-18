@@ -5,6 +5,7 @@ require './lib/buffet/types'
 
 class BuffetInterpreter
   def initialize(reg)
+    @env = {}
     @reg = reg
     @initial_reg = reg.dup
   end
@@ -135,6 +136,7 @@ class BuffetInterpreter
     puts pink_text(type_str(x))
   end
 
+  # Class methods are all REPL commands
   COMMANDS = singleton_methods.map(&:to_s).sort
 
   def repl
@@ -167,6 +169,19 @@ class BuffetInterpreter
   end
 
   def evaluate(line)
+    if md = line.match(/^(?<name>[A-Z]+\w*):(?<cmd>.*)/)
+      name = md[:name].to_sym
+
+      if @env.key?(name)
+        puts "#{name} is already defined"
+      else
+        @env[name] = md[:cmd]
+        puts pink_text(type_str(name))
+      end
+
+      return
+    end
+
     commands = line.split(/\s*->\s*/).map(&:strip)
 
     commands.each do |command|
@@ -184,6 +199,8 @@ class BuffetInterpreter
           tags_to_include.map {|m| m[:tag]},
           tags_to_exclude.map {|m| m[:tag]}
         )
+      elsif @env.key?(command)
+        evaluate(@env[command])
       elsif md = command.match(/^\/(?<query>.*)/)
         @reg = BuffetInterpreter.search(@reg, md[:query])
       elsif command == "reset"
