@@ -1,7 +1,6 @@
 require 'thor'
 require 'json'
 require 'date'
-require 'readline'
 
 require_relative 'buffet/interpreter'
 require_relative 'buffet/csv_parser'
@@ -99,89 +98,9 @@ module Buffet
       end
     end
 
-    COMMANDS = [
-      "quit",
-      "reset",
-      "monthly",
-      "yearly",
-      "sum",
-      "avg",
-      "count",
-      "reverse",
-      "last"
-    ].sort
-
     desc "repl", "interactive programming environment"
     def repl
-      Readline.completer_word_break_characters = ""
-      Readline.completion_proc = Proc.new do |str|
-        md = str.match(/(\s*)([^->]+)$/)
-
-        if md && md[2]
-          whitespace = md[1]
-          completable_part = md[2]
-          remainder = str[0...(str.size - completable_part.size - whitespace.size)]
-
-          COMMANDS.select do |command|
-            command =~ /#{Regexp.escape(completable_part)}/
-          end.map do |option|
-            "#{remainder}#{whitespace}#{option}"
-          end
-        end
-      end
-
-      reg = load_transactions
-
-      loop do
-        line = Readline.readline("> ", true)
-
-        if ["q", "quit"].include?(line)
-          break
-        else
-          commands = line.split(/\s*->\s*/).map(&:strip)
-
-          commands.each do |command|
-            if command.start_with?("[") || command.start_with?("!")
-              tag_matches = command.split(/\]\s*/).map do |part|
-                part.match(/(?<not>!?)\[(?<tag>(\w| )+)\]?/)
-              end
-
-              tags_to_exclude, tags_to_include = tag_matches.partition do |tag_match|
-                tag_match[:not] == "!"
-              end
-
-              reg = BuffetInterpreter.tag_filter(
-                reg,
-                tags_to_include.map {|m| m[:tag]},
-                tags_to_exclude.map {|m| m[:tag]}
-              )
-            elsif md = command.match(/^\/(?<query>.*)/)
-              reg = BuffetInterpreter.search(reg, md[:query])
-            elsif command == "accounts"
-              puts reg.map(&:account).uniq
-              exit
-            elsif command == "reset"
-              reg = load_transactions
-            elsif command == "avg"
-              reg = BuffetInterpreter.avg(reg)
-            elsif command == "count"
-              reg = BuffetInterpreter.count(reg)
-            elsif command == "reverse"
-              reg = BuffetInterpreter.reverse(reg)
-            elsif md = command.match(/last\s+(?<n>\d+)/) # last 3
-              reg = BuffetInterpreter.last(reg, md[:n].to_i)
-            elsif command == "monthly"
-              reg = BuffetInterpreter.monthly(reg)
-            elsif command == "yearly"
-              reg = BuffetInterpreter.yearly(reg)
-            elsif command == "sum"
-              reg = BuffetInterpreter.sum(reg)
-            end
-          end
-
-          BuffetInterpreter.print(reg)
-        end
-      end
+      BuffetInterpreter.new(load_transactions).repl
     end
 
     desc "tag", "interactively tag transactions"

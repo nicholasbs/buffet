@@ -1,7 +1,14 @@
+require 'readline'
+
 require './lib/colored_text'
 require './lib/buffet/types'
 
 class BuffetInterpreter
+  def initialize(reg)
+    @initial_reg = reg
+    @reg = reg.dup
+  end
+
   def self.tag_filter(x, tags_to_include, tags_to_exclude)
     if is_list_of_transactions?(x)
       x.select do |transaction|
@@ -122,6 +129,82 @@ class BuffetInterpreter
     end
 
     puts pink_text(type_str(x))
+  end
+
+  COMMANDS = singleton_methods.map(&:to_s).sort
+
+  def repl
+    Readline.completer_word_break_characters = ""
+    Readline.completion_proc = Proc.new do |str|
+      md = str.match(/(\s*)([^->]+)$/)
+
+      if md && md[2]
+        whitespace = md[1]
+        completable_part = md[2]
+        remainder = str[0...(str.size - completable_part.size - whitespace.size)]
+
+        COMMANDS.select do |command|
+          command =~ /#{Regexp.escape(completable_part)}/
+        end.map do |option|
+          "#{remainder}#{whitespace}#{option}"
+        end
+      end
+    end
+
+    loop do
+      line = Readline.readline("> ", true)
+
+      if ["q", "quit"].include?(line)
+        break
+      else
+        evaluate(line)
+      end
+    end
+  end
+
+  def evaluate(line)
+    commands = line.split(/\s*->\s*/).map(&:strip)
+
+    commands.each do |command|
+      if command.start_with?("[") || command.start_with?("!")
+        tag_matches = command.split(/\]\s*/).map do |part|
+          part.match(/(?<not>!?)\[(?<tag>(\w| )+)\]?/)
+        end
+
+        tags_to_exclude, tags_to_include = tag_matches.partition do |tag_match|
+          tag_match[:not] == "!"
+        end
+
+        @reg = BuffetInterpreter.tag_filter(
+          @reg,
+          tags_to_include.map {|m| m[:tag]},
+          tags_to_exclude.map {|m| m[:tag]}
+        )
+      elsif md = command.match(/^\/(?<query>.*)/)
+        @reg = BuffetInterpreter.search(@reg, md[:query])
+      elsif command == "accounts"
+        puts @reg.map(&:account).uniq
+        exit
+      elsif command == "reset"
+        @reg = @initial_reg.dup
+      elsif command == "avg"
+        @reg = BuffetInterpreter.avg(@reg)
+      elsif command == "count"
+        @reg = BuffetInterpreter.count(@reg)
+      elsif command == "reverse"
+        @reg = BuffetInterpreter.reverse(@reg)
+      elsif md = command.match(/last\s+(?<n>\d+)/) # last 3
+        @reg = BuffetInterpreter.last(@reg, md[:n].to_i)
+      elsif command == "monthly"
+        @reg = BuffetInterpreter.monthly(@reg)
+      elsif command == "yearly"
+        @reg = BuffetInterpreter.yearly(@reg)
+      elsif command == "sum"
+        @reg = BuffetInterpreter.sum(@reg)
+      end
+    end
+
+    BuffetInterpreter.print(@reg)
   end
 end
 
