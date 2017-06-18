@@ -6,13 +6,12 @@ programming environment.
 
 ### TODOs
 
+* Finish tag autocomplete so it works with negations and disjunctions.
+
 * Tag rules should take an optional block, which gets passed a Transaction, and
   which (if the block is present) causes the rule to apply only if the block
   returns true. Or perhaps there should be writing rules with blocks that can
   arbitrarily transform Transactions (e.g., Transaction -> Transaction).
-
-* Add autocomplete for tags. For example, if you type *[fo* you should be able
-  to press tab and get *[food]*.
 
 * Consider making types (using `Struct`) for all types, like `Transaction` is
   now.
