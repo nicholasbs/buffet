@@ -155,7 +155,7 @@ module Buffet
                 tags_to_include.map {|m| m[:tag]},
                 tags_to_exclude.map {|m| m[:tag]}
               )
-            elsif md = command.match(/\/(?<query>.*)/)
+            elsif md = command.match(/^\/(?<query>.*)/)
               reg = BuffetInterpreter.search(reg, md[:query])
             elsif command == "accounts"
               puts reg.map(&:account).uniq
