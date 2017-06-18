@@ -4,8 +4,8 @@ require './lib/colored_text'
 require './lib/buffet/types'
 
 class BuffetInterpreter
-  def initialize(reg)
-    @env = {}
+  def initialize(reg, env={})
+    @env = env
     @reg = reg
     @initial_reg = reg.dup
   end
@@ -129,6 +129,8 @@ class BuffetInterpreter
           puts "#{d}\t#{y}"
         end
       end
+    elsif is_empty_list?(x)
+      puts "[]"
     else
       type_error("print", x)
     end
@@ -236,6 +238,10 @@ def is_list_of_transactions?(x)
   is_list?(x) && is_transaction?(x[0])
 end
 
+def is_empty_list?(x)
+  is_list?(x) && x.empty?
+end
+
 def is_integer?(x)
   x.is_a? Fixnum
 end
@@ -265,7 +271,7 @@ def is_grouped_numbers?(x)
 end
 
 def type_str(x)
-  if is_list?(x)
+  if is_list?(x) && !is_empty_list?(x)
     if x[0].class != x[1].class
       "[#{type_str(x[0])}, #{type_str(x[1])}]"
     else

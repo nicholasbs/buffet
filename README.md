@@ -17,9 +17,6 @@ programming environment.
 * Consider making types (using `Struct`) for all types, like `Transaction` is
   now.
 
-* Format empty lists better when printing types (e.g., `[]` instead of
-  `[NilClass]).
-
 * Nicer error messages in general.
 
 * Update docs to reflect new output formatting.
