@@ -100,7 +100,7 @@ module Buffet
 
     desc "repl", "interactive programming environment"
     def repl
-      env = BuffetInterpreter.new(load_transactions, load_envrc).repl
+      env = Buffet::Interpreter.new(load_transactions, load_envrc).repl
 
       save_env(env)
     end
