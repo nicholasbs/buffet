@@ -192,6 +192,38 @@ You can quit the REPL using the `quit` (or `q`) command:
 $
 ```
 
+### Grammar
+
+WIP BNF-like grammar.
+
+```
+statement := expr
+           | alias
+
+alias := <Name>: expr
+
+expr := command
+      | command » expr
+
+command := / <query>
+         | last <n>
+         | reverse
+         | avg
+         | sum
+         | reset
+         | count
+         | monthly
+         | yearly
+         | print
+         | tags
+
+tags := tag
+      | tag tags
+
+tag := [<name>]
+     | ![<name>]
+```
+
 ### License
 
 Copyright 2017, Nicholas Bergson-Shilcock.
