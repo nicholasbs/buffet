@@ -336,8 +336,8 @@ module Buffet
 
     def save_env(env)
       File.open(Buffet::Config::ENV_PATH, "w") do |f|
-        env.each do |name, body|
-          f.write("#{name}: #{body}\n")
+        env.each do |name, node|
+          f.write(node.raw)
         end
       end
     end

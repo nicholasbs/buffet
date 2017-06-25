@@ -12,7 +12,7 @@ module Buffet
       @initial_reg = reg.dup
 
       envrc.each do |line|
-        evaluate(line)
+        evaluate(Buffet::Parser.parse(line))
       end
     end
 
@@ -204,7 +204,7 @@ module Buffet
           raise "#{node.name} is already defined"
         end
 
-        @env[node.name] = node.expr
+        @env[node.name] = node
       else
         puts node.class
       end
@@ -264,29 +264,13 @@ module Buffet
           to_exclude.map(&:name)
         )
       elsif @env.key?(cmd.keyword)
-        evaluate_expr(@env[cmd.keyword])
+        evaluate_expr(@env[cmd.keyword].expr)
       else
         raise "Unknown command: `#{cmd.keyword}`"
       end
     end
   end
 end
-
-          #tag_matches = command.split(/\]\s*/).map do |part|
-          #  part.match(/(?<not>!?)\[(?<tag>(\w| )+)\]?/)
-          #end
-
-          #tags_to_exclude, tags_to_include = tag_matches.partition do |tag_match|
-          #  tag_match[:not] == "!"
-          #end
-
-          #@reg = Interpreter.tag_filter(
-          #  @reg,
-          #  tags_to_include.map {|m| m[:tag]},
-          #  tags_to_exclude.map {|m| m[:tag]}
-          #)
-        #elsif @env.key?(command)
-        #  @reg = evaluate(@env[command])
 
 # Type helpers
 

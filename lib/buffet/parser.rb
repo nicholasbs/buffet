@@ -5,7 +5,7 @@ module Buffet
     def self.parse(string)
       scanner = StringScanner.new(string)
       if name = scanner.scan(/[A-Z]+\w*[^:]:/)
-        Alias.new(name[0..-2], parse_expr(scanner))
+        Alias.new(name[0..-2], parse_expr(scanner), string)
       else
         parse_expr(scanner)
       end
@@ -71,7 +71,7 @@ module Buffet
     end
 
     Expr = Struct.new(:left, :right)
-    Alias = Struct.new(:name, :expr)
+    Alias = Struct.new(:name, :expr, :raw)
     Command = Struct.new(:keyword, :arg)
     Tags = Struct.new(:left, :right)
     Tag = Struct.new(:name, :negated)
