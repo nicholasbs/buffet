@@ -70,10 +70,10 @@ module Buffet
       Tag.new(name, !!negated)
     end
 
-    Expr = Struct.new(:left, :right)
+    Expr = Struct.new(:cmd, :next)
     Alias = Struct.new(:name, :expr, :raw)
     Command = Struct.new(:keyword, :arg)
-    Tags = Struct.new(:left, :right)
+    Tags = Struct.new(:tag, :next)
     Tag = Struct.new(:name, :negated)
   end
 end

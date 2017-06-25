@@ -206,21 +206,17 @@ module Buffet
 
         @env[node.name] = node
       else
-        puts node.class
+        raise "Unexpected node in `evaluate`: #{node.class.name}"
       end
 
       @reg
     end
 
     def evaluate_expr(expr)
-      if expr.left.is_a? Buffet::Parser::Expr
-        evaluate_expr(expr.left)
-      else
-        evaluate_command(expr.left)
-      end
+      evaluate_command(expr.cmd)
 
-      if expr.right
-        evaluate_expr(expr.right)
+      if expr.next
+        evaluate_expr(expr.next)
       end
     end
 
@@ -230,7 +226,7 @@ module Buffet
       elsif node.is_a? Buffet::Parser::Tag
         [node]
       else
-        evaluate_tags(node.left) + evaluate_tags(node.right)
+        evaluate_tags(node.tag) + evaluate_tags(node.next)
       end
     end
 
