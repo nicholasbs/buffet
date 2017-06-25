@@ -1,7 +1,8 @@
 require 'readline'
 
-require './lib/colored_text'
-require './lib/buffet/types'
+require_relative 'parser'
+require_relative 'types'
+require_relative '../colored_text'
 
 module Buffet
   class Interpreter
@@ -183,10 +184,13 @@ module Buffet
           break
         else
           begin
-            reg = evaluate(line)
+            ast = Buffet::Parser.parse(line)
+            require 'pry-remote'
+            #binding.remote_pry
+            reg = evaluate(ast)
             Interpreter.print(reg)
-          rescue => e
-            puts e.message
+          #rescue => e
+            #puts e.message
           end
         end
       end
@@ -194,66 +198,81 @@ module Buffet
       @env
     end
 
-    def evaluate(line)
-      if md = line.match(/^(?<name>[A-Z]+\w*):(?<cmd>.*)/)
-        name = md[:name]
-        cmd = md[:cmd].strip
-
-        if @env.key?(name)
-          raise "#{name} is already defined"
-        else
-          @env[name] = cmd
+    def evaluate(node)
+      if node.is_a? Buffet::Parser::Expr
+        evaluate_expr(node)
+      elsif node.is_a? Buffet::Parser::Alias
+        if @env.key?(node.name)
+          raise "#{node.name} is already defined"
         end
 
-        return @reg
-      end
-
-      commands = line.split(/\s*#{Buffet::Config::COMMAND_SEPARATOR}\s*/).map(&:strip)
-
-      commands.each do |command|
-        if command.start_with?("[") || command.start_with?("!")
-          tag_matches = command.split(/\]\s*/).map do |part|
-            part.match(/(?<not>!?)\[(?<tag>(\w| )+)\]?/)
-          end
-
-          tags_to_exclude, tags_to_include = tag_matches.partition do |tag_match|
-            tag_match[:not] == "!"
-          end
-
-          @reg = Interpreter.tag_filter(
-            @reg,
-            tags_to_include.map {|m| m[:tag]},
-            tags_to_exclude.map {|m| m[:tag]}
-          )
-        elsif @env.key?(command)
-          @reg = evaluate(@env[command])
-        elsif md = command.match(/^\/(?<query>.*)/)
-          @reg = Interpreter.search(@reg, md[:query])
-        elsif command == "reset"
-          @reg = Interpreter.reset(@initial_reg)
-        elsif command == "avg"
-          @reg = Interpreter.avg(@reg)
-        elsif command == "count"
-          @reg = Interpreter.count(@reg)
-        elsif command == "reverse"
-          @reg = Interpreter.reverse(@reg)
-        elsif md = command.match(/last\s+(?<n>\d+)/) # last 3
-          @reg = Interpreter.last(@reg, md[:n].to_i)
-        elsif command == "monthly"
-          @reg = Interpreter.monthly(@reg)
-        elsif command == "yearly"
-          @reg = Interpreter.yearly(@reg)
-        elsif command == "sum"
-          @reg = Interpreter.sum(@reg)
-        else
-          raise "Unknown command: #{command}"
-        end
+        @env[node.name] = node.expr
+      else
+        puts node.class
       end
 
       @reg
     end
+
+    def evaluate_expr(expr)
+      if expr.left.is_a? Buffet::Parser::Expr
+        evaluate_expr(expr.left)
+      else
+        evaluate_command(expr.left)
+      end
+
+      if expr.right
+        evaluate_expr(expr.right)
+      end
+    end
+
+    def evaluate_command(cmd)
+      if cmd.keyword == 'search'
+        @reg = Interpreter.search(@reg, cmd.arg)
+      elsif cmd.keyword == 'reset'
+        @reg = Interpreter.reset(@initial_reg)
+      elsif cmd.keyword == 'last'
+        @reg = Interpreter.last(@reg, cmd.arg)
+      elsif cmd.keyword == 'reverse'
+        @reg = Interpreter.reverse(@reg)
+      elsif cmd.keyword == 'avg'
+        @reg = Interpreter.avg(@reg)
+      elsif cmd.keyword == 'sum'
+        @reg = Interpreter.sum(@reg)
+      elsif cmd.keyword == 'count'
+        @reg = Interpreter.count(@reg)
+      elsif cmd.keyword == 'monthly'
+        @reg = Interpreter.monthly(@reg)
+      elsif cmd.keyword == 'yearly'
+        @reg = Interpreter.yearly(@reg)
+      elsif cmd.keyword == 'print'
+        @reg = Interpreter.print(@reg)
+      elsif cmd.keyword == 'tags'
+        raise "Haven't done tags yet"
+      elsif @env.key?(cmd.keyword)
+        evaluate_expr(@env[cmd.keyword])
+      else
+        raise "Unknown command: `#{cmd.keyword}`"
+      end
+    end
   end
 end
+
+          #tag_matches = command.split(/\]\s*/).map do |part|
+          #  part.match(/(?<not>!?)\[(?<tag>(\w| )+)\]?/)
+          #end
+
+          #tags_to_exclude, tags_to_include = tag_matches.partition do |tag_match|
+          #  tag_match[:not] == "!"
+          #end
+
+          #@reg = Interpreter.tag_filter(
+          #  @reg,
+          #  tags_to_include.map {|m| m[:tag]},
+          #  tags_to_exclude.map {|m| m[:tag]}
+          #)
+        #elsif @env.key?(command)
+        #  @reg = evaluate(@env[command])
 
 # Type helpers
 

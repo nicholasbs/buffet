@@ -4,9 +4,8 @@ module Buffet
   class Parser
     def self.parse(string)
       scanner = StringScanner.new(string)
-      if name = scanner.scan(/[A-Z]+\w*[^:]/)
-        scanner.skip(/:\s*/)
-        Alias.new(name, parse_expr(scanner))
+      if name = scanner.scan(/[A-Z]+\w*[^:]:/)
+        Alias.new(name[0..-2], parse_expr(scanner))
       else
         parse_expr(scanner)
       end
@@ -18,9 +17,9 @@ module Buffet
       scanner.skip(/\s*/)
 
       if scanner.eos?
-        command
+        Expr.new(command, nil)
       else
-        scanner.skip(/\s*»\s*/)
+        scanner.skip(/\s*#{Buffet::Config::COMMAND_SEPARATOR}\s*/)
         Expr.new(command, parse_expr(scanner))
       end
     end
@@ -31,12 +30,12 @@ module Buffet
       if scanner.match?(/!?\[\w+\w|\s*\]/)
         parse_tags(scanner)
       else
-        keyword = scanner.scan(/([a-z]+)|\//)
+        keyword = scanner.scan(/([A-Za-z]+)|\//)
         scanner.skip(/\s*/)
 
         if keyword == "/"
-          arg = scanner.scan(/[^»]*/)
-          Command.new(keyword, arg.strip)
+          arg = scanner.scan(/[^#{Buffet::Config::COMMAND_SEPARATOR}]*/)
+          Command.new("search", arg.strip)
         elsif keyword == "last"
           arg = scanner.scan(/\d+/)
           Command.new(keyword, arg.to_i)
