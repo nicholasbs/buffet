@@ -185,12 +185,10 @@ module Buffet
         else
           begin
             ast = Buffet::Parser.parse(line)
-            require 'pry-remote'
-            #binding.remote_pry
             reg = evaluate(ast)
             Interpreter.print(reg)
-          #rescue => e
-            #puts e.message
+          rescue => e
+            puts e.message
           end
         end
       end
@@ -226,6 +224,16 @@ module Buffet
       end
     end
 
+    def evaluate_tags(node)
+      if node.nil?
+        []
+      elsif node.is_a? Buffet::Parser::Tag
+        [node]
+      else
+        evaluate_tags(node.left) + evaluate_tags(node.right)
+      end
+    end
+
     def evaluate_command(cmd)
       if cmd.keyword == 'search'
         @reg = Interpreter.search(@reg, cmd.arg)
@@ -248,7 +256,13 @@ module Buffet
       elsif cmd.keyword == 'print'
         @reg = Interpreter.print(@reg)
       elsif cmd.keyword == 'tags'
-        raise "Haven't done tags yet"
+        tags = evaluate_tags(cmd.arg)
+        to_exclude, to_include = tags.partition(&:negated)
+        @reg = Interpreter.tag_filter(
+          @reg,
+          to_include.map(&:name),
+          to_exclude.map(&:name)
+        )
       elsif @env.key?(cmd.keyword)
         evaluate_expr(@env[cmd.keyword])
       else

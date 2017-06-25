@@ -28,7 +28,7 @@ module Buffet
       scanner.skip(/\s*/)
 
       if scanner.match?(/!?\[\w+\w|\s*\]/)
-        parse_tags(scanner)
+        Command.new("tags", parse_tags(scanner))
       else
         keyword = scanner.scan(/([A-Za-z]+)|\//)
         scanner.skip(/\s*/)
