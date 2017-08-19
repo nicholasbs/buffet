@@ -44,7 +44,6 @@ private
     def account_name
       class_name = self.class.name.split('::').last
       if Buffet::Config::ACCOUNT_NAME_GENERATORS[class_name]
-        puts "found gen"
         Buffet::Config::ACCOUNT_NAME_GENERATORS[class_name].call(filename)
       end
     end
