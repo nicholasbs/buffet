@@ -11,6 +11,7 @@ class CSVParser
 
 private
   CHASE_REGEX = /^Type,Trans Date,Post Date,Description,Amount(,Category,Memo)?/
+  CHASE_CHECKING_REGEX = /^Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #/
   SCHWAB_REGEX = /Transactions\s+for\s+(?<account_name>.*)\s+as\s+of\s+(?<timestamp>.*)/
   BANK_OF_AMERICA_REGEX = /^Description,,Summary Amt\./
   AMEX_REGEX = /^\d{2}\/\d{2}\/\d{4}\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun),,"/
@@ -20,6 +21,8 @@ private
       line = f.readline
       if line =~ CHASE_REGEX
         ChaseCSV
+      elsif line =~ CHASE_CHECKING_REGEX
+        ChaseCheckingCSV
       elsif line =~ SCHWAB_REGEX
         SchwabCSV
       elsif line =~ BANK_OF_AMERICA_REGEX
@@ -122,6 +125,37 @@ private
 
     def account_name
       super || Buffet::Config::ACCOUNT_ALIASES["Chase"] || "Chase"
+    end
+  end
+
+  class ChaseCheckingCSV < AbstractCSV
+    def initialize(filename)
+      @filename = filename
+      @transactions = []
+
+      File.open(filename) do |f|
+        # Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #
+        f.readline # ignore header
+
+        CSV.parse(f.read).each.with_index do |row, i|
+          transactions <<  Transaction.new(
+            row_hash(row), # hash
+            account_name, # account
+            Date.strptime(row[1], "%m/%d/%Y"), # date (posting date, since that's all Chase gives)a
+            row[3].to_f, # amount
+            row[2], # description
+            nil, #  check number
+            row[4], # transaction type
+            row[5], # running balance
+            Date.strptime(row[1], "%m/%d/%Y"), # post date
+            [], # tags
+          )
+        end
+      end
+    end
+
+    def account_name
+      super || Buffet::Config::ACCOUNT_ALIASES["Chase checking"] || "Chase checking"
     end
   end
 
