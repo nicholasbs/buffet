@@ -64,7 +64,7 @@ module Buffet
       negated = scanner.scan(/!/)
 
       scanner.skip(/\[/)
-      name = scanner.scan(/\w+[^\]]/)
+      name = scanner.scan(/\w+(\s*\w+)?[^\]]/)
       scanner.skip(/\]/)
 
       Tag.new(name, !!negated)
