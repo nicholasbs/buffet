@@ -254,7 +254,7 @@ private
   end
 end
 
-Transaction = Struct.new(:hash, :account, :date, :amount, :description, :check_number, :transaction_type, :running_balance, :post_date, :tags) do
+Transaction = Struct.new(:hash, :account, :date, :amount, :description, :check_number, :transaction_type, :running_balance, :post_date, :tags, :original_amount) do
   def format
     tag_str = tags.sort_by do |t1,t2|
         # List primary tags first

@@ -134,6 +134,14 @@ module Buffet
               if input == 'q' || input == 'quit'
                 tagging = false
               else
+                adjusted_amount = nil
+                # E.g. "-20.50:gas" to tag the transaction as gas and set the
+                # amount to -$20.50
+                if md = input.match(/^(?<amount>\-?\d+\.?\d?\d?):(?<rest>.*)/)
+                  adjusted_amount = md[:amount].to_f
+                  input = md[:rest]
+                end
+
                 tags += input.split(/,\s*/).
                   map {|tag| expand_tag(tag) }.
                   map {|tag| apply_tag_implications(tag)}.
@@ -143,6 +151,11 @@ module Buffet
                 unknown = tags.select {|tag| !Buffet::Config::PRIMARY_TAGS.include?(tag) && !Buffet::Config::TAGS.include?(tag)}
 
                 if unknown.empty?
+                  if adjusted_amount
+                    t.original_amount = t.amount
+                    t.amount = adjusted_amount
+                  end
+
                   t.tags = tags
                 else
                   puts "Unknown tags: #{unknown.join(", ")}"
