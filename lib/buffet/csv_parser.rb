@@ -202,6 +202,14 @@ private
 
         2.times { f.readline } # hack to skip next two lines
 
+        # Schwab seems to have added an extra header line to their CSVs. This
+        # consumes that line if it's there and seeks back one line if it's not
+        # (to ensure backwards compatability).
+        line_num = f.lineno
+        if f.readline != "Posted Transactions"
+          f.lineno = line_num
+        end
+
         # 0 date, 1 type, 2 check 3 description, 4 withdraw (-), 5 deposit (+), 6 running balance
         CSV.parse(f.read).each.with_index do |row, i|
           if !row[4].empty? && !row[5].empty?
