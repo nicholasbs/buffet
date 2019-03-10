@@ -10,7 +10,8 @@ class CSVParser
   end
 
 private
-  CHASE_REGEX = /^Type,Trans Date,Post Date,Description,Amount(,Category,Memo)?/
+  CHASE_REGEX = /^Transaction Date,Post Date,Description,Category,Type,Amount/
+  CHASE_OLD_REGEX = /^Type,Trans Date,Post Date,Description,Amount(,Category,Memo)?/
   CHASE_CHECKING_REGEX = /^Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #/
   SCHWAB_REGEX = /Transactions\s+for\s+(?<account_name>.*)\s+as\s+of\s+(?<timestamp>.*)/
   BANK_OF_AMERICA_REGEX = /^Description,,Summary Amt\./
@@ -21,6 +22,8 @@ private
       line = f.readline
       if line =~ CHASE_REGEX
         ChaseCSV
+      elsif line =~ CHASE_OLD_REGEX
+        ChaseOldCSV
       elsif line =~ CHASE_CHECKING_REGEX
         ChaseCheckingCSV
       elsif line =~ SCHWAB_REGEX
@@ -30,7 +33,7 @@ private
       elsif line =~ AMEX_REGEX
         AmexCSV
       else
-        puts("Unknown CSV type. This might be an unsupported bank or the format changed.")
+        puts("Unknown CSV type. This might be an unsupported bank or the format changed. \n\nHeader:\n#{line}")
         exit 1
       end
     end
@@ -84,6 +87,45 @@ private
   end
 
   class ChaseCSV < AbstractCSV
+    def initialize(filename)
+      @filename = filename
+      @transactions = []
+
+      File.open(filename) do |f|
+        # Transaction Date 0,Post Date 1,Description 2,Category 3,Type 4,Amount 5
+        f.readline # ignore header
+
+        CSV.parse(f.read).each.with_index do |row, i|
+          if row.size == 6
+            amount = row[5].to_f
+            description = row[2]
+            type = row[4]
+          else
+            raise "Error processing Chase CSV: Row #{i} has #{row.size} columns. Maybe transaction has a comma in name?"
+          end
+
+          transactions <<  Transaction.new(
+            row_hash(row), # hash
+            account_name, # account
+            Date.strptime(row[0], "%m/%d/%Y"), # date
+            amount,
+            description,
+            nil, #  check number - N/A
+            type, # transaction type
+            nil, # running balance - N/A
+            Date.strptime(row[1], "%m/%d/%Y"), # post date
+            [], # tags
+          )
+        end
+      end
+    end
+
+    def account_name
+      super || Buffet::Config::ACCOUNT_ALIASES["Chase"] || "Chase"
+    end
+  end
+
+  class ChaseOldCSV < AbstractCSV
     def initialize(filename)
       @filename = filename
       @transactions = []
