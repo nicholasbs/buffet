@@ -283,7 +283,7 @@ def is_empty_list?(x)
 end
 
 def is_integer?(x)
-  x.is_a? Fixnum
+  x.is_a? Integer
 end
 
 def is_float?(x)
