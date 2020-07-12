@@ -15,7 +15,8 @@ private
   CHASE_CHECKING_REGEX = /^Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #/
   SCHWAB_REGEX = /Transactions\s+for\s+(?<account_name>.*)\s+as\s+of\s+(?<timestamp>.*)/
   BANK_OF_AMERICA_REGEX = /^Description,,Summary Amt\./
-  AMEX_REGEX = /^\d{2}\/\d{2}\/\d{4}\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun),,"/
+  AMEX_REGEX = /^Date,Description,Amount$/
+  AMEX_OLD_REGEX = /^\d{2}\/\d{2}\/\d{4}\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun),,"/
 
   def self.get_csv_parser(filename)
     File.open(filename) do |f|
@@ -32,6 +33,8 @@ private
         BankOfAmericaCSV
       elsif line =~ AMEX_REGEX
         AmexCSV
+      elsif line =~ AMEX_OLD_REGEX
+        AmexOldCSV
       else
         puts("Unknown CSV type. This might be an unsupported bank or the format changed. \n\nHeader:\n#{line}")
         exit 1
@@ -202,6 +205,40 @@ private
   end
 
   class AmexCSV < AbstractCSV
+    def initialize(filename)
+      @filename = filename
+      @transactions = []
+
+      File.open(filename) do |f|
+        # Date,Description,Amount
+        f.readline # ignore header
+
+        CSV.parse(f.read).each.with_index do |row, i|
+
+          amount = row[2].to_f * -1 # make expenses negative and payments positive
+
+          transactions <<  Transaction.new(
+            row_hash(row), # hash
+            account_name, # account
+            Date.strptime(row[0], "%m/%d/%y"), # date
+            amount, # amount
+            row[1], # description
+            nil, # check number - N/A
+            nil, # transaction type - N/A
+            nil, # running balance - N/A
+            nil, # post data - N/A
+            [], # tags
+          )
+        end
+      end
+    end
+
+    def account_name
+      super || Buffet::Config::ACCOUNT_ALIASES["Amex"] || "Amex"
+    end
+  end
+
+  class AmexOldCSV < AbstractCSV
     def initialize(filename)
       @filename = filename
       @transactions = []
