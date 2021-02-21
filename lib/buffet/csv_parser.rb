@@ -96,10 +96,11 @@ private
 
       File.open(filename) do |f|
         # Transaction Date 0,Post Date 1,Description 2,Category 3,Type 4,Amount 5
-        f.readline # ignore header
+        # UPDATE: Chase added a "Memo" column as of my Nov 2020 CSV.
+        header = f.readline.strip
 
         CSV.parse(f.read).each.with_index do |row, i|
-          if row.size == 6
+          if (header.end_with?("Amount") && row.size == 6) || (header.end_with?("Memo") && row.size == 7)
             amount = row[5].to_f
             description = row[2]
             type = row[4]
